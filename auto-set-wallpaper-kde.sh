@@ -4,7 +4,7 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus"
 
 basepath=$(cd `dirname $0`; pwd)
 breeze_colorful_path="${HOME}/src/breeze-colorful/"
-cd "${basepath}/arsenixc_wallpaper"
+cd "${basepath}/general"
 
 if [ $(date +%H) -ge 6 -a $(date +%H) -lt 17 ]
 then
@@ -72,14 +72,14 @@ then
     fi
     rm "${basepath}/arsenixc_wallpaper/"unsplash-*
     selected_wallpaper="unsplash-$(date +%H-%M).jpg"
-    wget "$(python3 ${basepath}/unsplash.py)" -O "${basepath}/arsenixc_wallpaper/${selected_wallpaper}"
+    wget "$(python3 ${basepath}/unsplash.py)" -O "${basepath}/general/${selected_wallpaper}"
 fi
 
 script="var a = desktops();\
   for(i = 0; i < a.length; i++){\
     d = a[i];d.wallpaperPlugin = \"org.kde.image\";\
     d.currentConfigGroup = Array(\"Wallpaper\", \"org.kde.image\", \"General\");\
-    d.writeConfig(\"Image\", \"file://${basepath}/arsenixc_wallpaper/${selected_wallpaper}\");\
+    d.writeConfig(\"Image\", \"file://${basepath}/general/${selected_wallpaper}\");\
     d.writeConfig(\"FillMode\", 2);\
     d.writeConfig(\"Color\", \"#000\");\
   }"
@@ -99,11 +99,7 @@ fi
 
 if [[ $1 == "colorful" ]]
 then
-    cp /home/midorikawa/.config/kdeglobals /tmp/kgs.old
-    /usr/local/bin/kcmcolorfulhelper "${basepath}/arsenixc_wallpaper/${selected_wallpaper}"
-    cp /home/midorikawa/.config/kdeglobals /tmp/kgs.new
-    diff /tmp/kgs.old /tmp/kgs.new > /tmp/kgs.diff
-    
+    /usr/local/bin/kcmcolorfulhelper "${basepath}/general/${selected_wallpaper}"
 fi
 
 if [[ $1 == "unsplash" ]]

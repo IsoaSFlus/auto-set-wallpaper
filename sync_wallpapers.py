@@ -1,23 +1,28 @@
 #!/usr/bin/python3
+import sys
 from github import Github
 import multiprocessing
 import subprocess
 import os
 
-def wallpaper_dl(url):
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'moebuta':
+        label = sys.argv[1]
+else:
+    label = 'general'
+
+def wallpaper_dl(url, label):
     print('Start downloading...')
-    cmd = "wget '{}' -q  -P arsenixc_wallpaper".format(url)
+    cmd = "wget '{}' -q  -P '{}'".format(url, label)
     subprocess.call(cmd, shell = True)
 
 g = Github()
 n = g.get_user('IsoaSFlus')
-n.bio
 r = n.get_repo('Wallpapers')
-r.get_contents('general')
-pics = r.get_contents('general')
+pics = r.get_contents(label)
 
 try:
-    files = os.listdir('./arsenixc_wallpaper')
+    files = os.listdir('./{}'.format(label))
 except FileNotFoundError:
     print('No wallpaper dir!')
     files = []
@@ -29,7 +34,7 @@ for pic in pics:
     if pic.name in files:
         continue
     else:
-        pool.apply_async(wallpaper_dl, (pic.download_url, ))
+        pool.apply_async(wallpaper_dl, (pic.download_url, label))
 
 pool.close()
 pool.join()
