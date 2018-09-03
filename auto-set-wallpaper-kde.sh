@@ -63,6 +63,7 @@ while [[ "$check_exist" != "" ]] ; do
         fi
     fi
 done
+echo ${selected_wallpaper}
 
 if [[ $1 == "unsplash" ]]
 then
@@ -99,7 +100,7 @@ fi
 
 if [[ $1 == "colorful" ]]
 then
-    /usr/local/bin/kcmcolorfulhelper "${basepath}/general/${selected_wallpaper}"
+    /usr/local/bin/kcmcolorfulhelper -p "${basepath}/general/${selected_wallpaper}"
 fi
 
 if [[ $1 == "unsplash" ]]
