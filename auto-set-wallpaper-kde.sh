@@ -4,66 +4,113 @@ export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus"
 
 basepath=$(cd `dirname $0`; pwd)
 breeze_colorful_path="${HOME}/src/breeze-colorful/"
-cd "${basepath}/general"
+selected_wallpaper=""
+cd "${basepath}/"
 
-if [ $(date +%H) -ge 6 -a $(date +%H) -lt 17 ]
-then
-    period="d"
-elif [ $(date +%H) -ge 17 -a $(date +%H) -lt 19 ]
-then
-    period="s"
-else
-    period="n"
-    if [ $(date +%H) -eq 19 ]
+function general_wallpaper()
+{
+    if [ $(date +%H) -ge 6 -a $(date +%H) -lt 17 ]
     then
-        period="n"
-    fi
-fi
-
-if [ ! -f ./.selected ]
-then
-    echo '=day=
-=sunset=
-=night=' > ./.selected
-fi
-
-if [ $(ls | grep ${period}- | wc -l) -le $(cat ./.selected | grep ${period}- | wc -l) ]
-then
-    if [[ ${period} == "d" ]]
+        period="d"
+    elif [ $(date +%H) -ge 17 -a $(date +%H) -lt 19 ]
     then
-        line_begin=`expr $(sed -n '/=day=/=' ./.selected) + 1`
-        line_end=`expr $(sed -n '/=sunset=/=' ./.selected) - 1`
-        sed -i "${line_begin},${line_end}d" ./.selected
-    elif [[ ${period} == "s" ]]
-    then
-        line_begin=`expr $(sed -n '/=sunset=/=' ./.selected) + 1`
-        line_end=`expr $(sed -n '/=night=/=' ./.selected) - 1`
-        sed -i "${line_begin},${line_end}d" ./.selected
+        period="s"
     else
-        line_begin=`expr $(sed -n '/=night=/=' ./.selected) + 1`
-        sed -i "${line_begin},\$d" ./.selected
-    fi
-fi
-
-
-check_exist="1"
-while [[ "$check_exist" != "" ]] ; do
-    selected_wallpaper=$(ls "${period}"-*| shuf -n1)
-    if [ "$(cat ./.selected | grep "${selected_wallpaper}")" == "" ]
-    then
-        check_exist=""
-        if [[ ${period} == "d" ]]
+        period="n"
+        if [ $(date +%H) -eq 19 ]
         then
-            sed -i "/=day=/a\ ${selected_wallpaper}" ./.selected
-        elif [[ ${period} == "s" ]]
-        then
-            sed -i "/=sunset=/a\ ${selected_wallpaper}" ./.selected
-        else
-            sed -i "/=night=/a\ ${selected_wallpaper}" ./.selected
+            period="n"
         fi
     fi
-done
-echo ${selected_wallpaper}
+
+    if [ ! -f ./general/.selected ]
+    then
+        echo  '=day=
+=sunset=
+=night=' > ./general/.selected
+    fi
+
+    if [ $(ls ./general | grep ${period}- | wc -l) -le $(cat ./general/.selected | grep ${period}- | wc -l) ]
+    then
+        if [[ ${period} == "d" ]]
+        then
+            line_begin=`expr $(sed -n '/=day=/=' ./general/.selected) + 1`
+            line_end=`expr $(sed -n '/=sunset=/=' ./general/.selected) - 1`
+            sed -i "${line_begin},${line_end}d" ./general/.selected
+        elif [[ ${period} == "s" ]]
+        then
+            line_begin=`expr $(sed -n '/=sunset=/=' ./general/.selected) + 1`
+            line_end=`expr $(sed -n '/=night=/=' ./general/.selected) - 1`
+            sed -i "${line_begin},${line_end}d" ./general/.selected
+        else
+            line_begin=`expr $(sed -n '/=night=/=' ./general/.selected) + 1`
+            sed -i "${line_begin},\$d" ./general/.selected
+        fi
+    fi
+
+
+    check_exist="1"
+    while [[ "$check_exist" != "" ]] ; do
+        selected_wallpaper=$(ls ./general/${period}-* | shuf -n1)
+        if [ "$(cat ./general/.selected | grep "${selected_wallpaper}")" == "" ]
+        then
+            check_exist=""
+            if [[ ${period} == "d" ]]
+            then
+                sed -i "/=day=/a\ ${selected_wallpaper}" ./general/.selected
+            elif [[ ${period} == "s" ]]
+            then
+                sed -i "/=sunset=/a\ ${selected_wallpaper}" ./general/.selected
+            else
+                sed -i "/=night=/a\ ${selected_wallpaper}" ./general/.selected
+            fi
+        fi
+    done
+    echo ${selected_wallpaper}
+}
+
+function moebuta_wallpaper()
+{
+    if [ ! -f ./moebuta/.selected ]
+    then
+        touch ./moebuta/.selected
+    fi
+
+    if [ `expr $(ls ./moebuta | wc -l) - 1` -le $(cat ./moebuta/.selected | wc -l) ]
+    then
+        rm ./moebuta/.selected
+        touch ./moebuta/.selected
+    fi
+
+
+    check_exist="1"
+    while [[ "$check_exist" != "" ]] ; do
+        selected_wallpaper=$(ls ./moebuta/* | shuf -n1)
+        if [ "$(cat ./moebuta/.selected | grep "${selected_wallpaper}")" == "" ]
+        then
+            check_exist=""
+            sed -i "1i\ ${selected_wallpaper}" ./moebuta/.selected
+        fi
+    done
+    echo ${selected_wallpaper}
+}
+
+function set_wallpaper()
+{
+    script="var a = desktops();\
+  for(i = 0; i < a.length; i++){\
+    d = a[i];d.wallpaperPlugin = \"org.kde.image\";\
+    d.currentConfigGroup = Array(\"Wallpaper\", \"org.kde.image\", \"General\");\
+    d.writeConfig(\"Image\", \"file://${basepath}/${1}\");\
+    d.writeConfig(\"FillMode\", 2);\
+    d.writeConfig(\"Color\", \"#000\");\
+  }"
+    qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "${script}"
+    # kwriteconfig5 --file plasma-org.kde.plasma.desktop-appletsrc --group Containments --group 20 --group Wallpaper --group org.kde.image --group General --key Image --type string "file://${basepath}/arsenixc_wallpaper/${selected_wallpaper}"
+
+    sleep 2
+}
+
 
 if [[ $1 == "unsplash" ]]
 then
@@ -76,34 +123,21 @@ then
     wget "$(python3 ${basepath}/unsplash.py)" -O "${basepath}/general/${selected_wallpaper}"
 fi
 
-script="var a = desktops();\
-  for(i = 0; i < a.length; i++){\
-    d = a[i];d.wallpaperPlugin = \"org.kde.image\";\
-    d.currentConfigGroup = Array(\"Wallpaper\", \"org.kde.image\", \"General\");\
-    d.writeConfig(\"Image\", \"file://${basepath}/general/${selected_wallpaper}\");\
-    d.writeConfig(\"FillMode\", 2);\
-    d.writeConfig(\"Color\", \"#000\");\
-  }"
-qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "${script}"
-# kwriteconfig5 --file plasma-org.kde.plasma.desktop-appletsrc --group Containments --group 20 --group Wallpaper --group org.kde.image --group General --key Image --type string "file://${basepath}/arsenixc_wallpaper/${selected_wallpaper}"
-
-sleep 2
-if [[ $1 == "new_blur" ]]
+if [[ $2 == "moebuta" ]]
 then
-    if [[ `echo ${selected_wallpaper} | grep "ikdark"` != "" ]]
-    then
-        kwriteconfig5 --file plasmarc --group Theme --key name --type string breeze-light
-    else
-        kwriteconfig5 --file plasmarc --group Theme --key name --type string default
-    fi
+    moebuta_wallpaper
+else
+    general_wallpaper
 fi
+
+set_wallpaper "${selected_wallpaper}"
 
 if [[ $1 == "colorful" ]]
 then
-    /usr/local/bin/kcmcolorfulhelper -p "${basepath}/general/${selected_wallpaper}"
+    /usr/local/bin/kcmcolorfulhelper -p "${basepath}/${selected_wallpaper}"
 fi
 
 if [[ $1 == "unsplash" ]]
 then
-    "${breeze_colorful_path}/change_theme.sh" "${basepath}/arsenixc_wallpaper/${selected_wallpaper}" 
+    /usr/local/bin/kcmcolorfulhelper -p "${basepath}/general/${selected_wallpaper}"
 fi

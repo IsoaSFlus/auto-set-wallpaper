@@ -18,7 +18,7 @@ def wallpaper_dl(url, label):
 
 g = Github()
 n = g.get_user('IsoaSFlus')
-r = n.get_repo('Wallpapers')
+r = n.get_repo('wpc')
 pics = r.get_contents(label)
 
 try:
