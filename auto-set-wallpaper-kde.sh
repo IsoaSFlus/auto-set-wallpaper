@@ -73,13 +73,12 @@ function moebuta_wallpaper()
 {
     if [ ! -f ./moebuta/.selected ]
     then
-        touch ./moebuta/.selected
+        echo '' > ./moebuta/.selected
     fi
 
     if [ `expr $(ls ./moebuta | wc -l) - 1` -le $(cat ./moebuta/.selected | wc -l) ]
     then
-        rm ./moebuta/.selected
-        touch ./moebuta/.selected
+        echo '' > ./moebuta/.selected
     fi
 
 
