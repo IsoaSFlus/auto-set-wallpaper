@@ -46,6 +46,7 @@ function general_wallpaper()
             line_begin=`expr $(sed -n '/=night=/=' ./general/.selected) + 1`
             sed -i "${line_begin},\$d" ./general/.selected
         fi
+        echo "New image cycle."
     fi
 
 
@@ -79,6 +80,7 @@ function moebuta_wallpaper()
     if [ `expr $(ls ./moebuta | wc -l) - 1` -le $(cat ./moebuta/.selected | wc -l) ]
     then
         echo '' > ./moebuta/.selected
+        echo "New image cycle."
     fi
 
 
@@ -117,9 +119,23 @@ then
     then
         exit
     fi
-    rm "${basepath}/arsenixc_wallpaper/"unsplash-*
+    # rm "${basepath}/arsenixc_wallpaper/"unsplash-*
     selected_wallpaper="unsplash-$(date +%H-%M).jpg"
-    wget "$(python3 ${basepath}/unsplash.py)" -O "${basepath}/general/${selected_wallpaper}"
+    aria2c -s100  "$(python3 ${basepath}/unsplash.py)" -d /tmp -o "${selected_wallpaper}"
+    script="var a = desktops();\
+  for(i = 0; i < a.length; i++){\
+    d = a[i];d.wallpaperPlugin = \"org.kde.image\";\
+    d.currentConfigGroup = Array(\"Wallpaper\", \"org.kde.image\", \"General\");\
+    d.writeConfig(\"Image\", \"file:///tmp/${selected_wallpaper}\");\
+    d.writeConfig(\"FillMode\", 2);\
+    d.writeConfig(\"Color\", \"#000\");\
+  }"
+    qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "${script}"
+    # kwriteconfig5 --file plasma-org.kde.plasma.desktop-appletsrc --group Containments --group 20 --group Wallpaper --group org.kde.image --group General --key Image --type string "file://${basepath}/arsenixc_wallpaper/${selected_wallpaper}"
+
+    sleep 2
+    /usr/local/bin/kcmcolorfulhelper -p "/tmp/${selected_wallpaper}"
+    exit
 fi
 
 if [[ $2 == "moebuta" ]]
@@ -134,9 +150,4 @@ set_wallpaper "${selected_wallpaper}"
 if [[ $1 == "colorful" ]]
 then
     /usr/local/bin/kcmcolorfulhelper -p "${basepath}/${selected_wallpaper}"
-fi
-
-if [[ $1 == "unsplash" ]]
-then
-    /usr/local/bin/kcmcolorfulhelper -p "${basepath}/general/${selected_wallpaper}"
 fi
